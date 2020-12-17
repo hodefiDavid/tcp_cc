@@ -9,7 +9,7 @@
 
 #define SERVER_PORT 5060
 
-int main(int argc, char **argv) {//ll
+int main(int argc, char **argv) {//jjk
     char buf[256];
     socklen_t len;
 
