@@ -1,7 +1,7 @@
 /*
     TCP/IP-server
 */
-
+#define MAXDATASIZE 1500
 #include<stdio.h>
 
 // Linux and other UNIXes
@@ -59,6 +59,7 @@ int main()
 
     while (1)
     {
+
         memset(&clientAddress, 0, sizeof(clientAddress));
 //        clientAddressLen = sizeof(clientAddress);
         int clientSocket = accept(listening_sock, (struct sockaddr *)&clientAddress, &clientAddressLen);
@@ -70,6 +71,21 @@ int main()
         }
 
         printf("A new client connection accepted\n");
+
+        int numbytes;
+
+        if ((numbytes=recv(clientSocket, buf, MAXDATASIZE, 0)) == -1) {
+            perror("recv");
+            exit(1);
+        }
+
+        buf[numbytes] = '\0';
+
+        printf("Received in pid=%d,"
+               "\ntext=: %s \n",getpid(), buf);
+        sleep(1);
+
+
 
         //Reply to client
         char message[] = "Welcome to our TCP-server\n";
