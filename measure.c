@@ -1,7 +1,8 @@
 /*
     TCP/IP-server
 */
-#define MAXDATASIZE 1500
+#define MAXDATASIZE 10485760
+
 #include<stdio.h>
 
 // Linux and other UNIXes
@@ -17,8 +18,8 @@
 
 #define SERVER_PORT 5060  //The port that the server listens
 
-int main()
-{    char buf[256];
+int main() {
+    char buf[100];//was 256
     socklen_t len;
 
 //    1. open new socket
@@ -56,16 +57,14 @@ int main()
 
     struct sockaddr_in clientAddress;  //
     socklen_t clientAddressLen = sizeof(clientAddress);
-
-    while (1)
-    {
+    int sumOfBytes = 0;
+    while (1) {
 
         memset(&clientAddress, 0, sizeof(clientAddress));
 //        clientAddressLen = sizeof(clientAddress);
-        int clientSocket = accept(listening_sock, (struct sockaddr *)&clientAddress, &clientAddressLen);
-        if (clientSocket == -1)
-        {
-            printf("listen failed with error code : %d",errno);
+        int clientSocket = accept(listening_sock, (struct sockaddr *) &clientAddress, &clientAddressLen);
+        if (clientSocket == -1) {
+            printf("listen failed with error code : %d", errno);
             // TODO: close the sockets
             return -1;
         }
@@ -74,16 +73,44 @@ int main()
 
         int numbytes;
 
-        if ((numbytes=recv(clientSocket, buf, MAXDATASIZE, 0)) == -1) {
+//        char buffer[8192]; // or whatever you like, but best to keep it large
+//        int count = 0;
+//        int total = 0;
+//
+//        while ((count = recv(clientSocket, &buffer[total], sizeof(buffer), 0)) > 0) {
+//            total += count;
+//            // At this point the buffer is valid from 0..total-1, if that's enough then process it and break, otherwise continue
+//        }
+//        if (count == -1) {
+//            perror("recv");
+//        } else if (count == 0) {
+//            // EOS on the socket: close it, exit the thread, etc.
+//        }
+//        printf("total = %d", total);
+
+
+        do {
+            numbytes = recv(clientSocket, buf, 100, 0);
+//            if (numbytes == -1) {
+//                perror("recv");
+//                exit(1);
+//            }
+            sumOfBytes+=numbytes;
+            printf("numbytes=%d", numbytes);
+//                    sleep(0.01);
+
+        } while (numbytes != -1);
+        if ((numbytes = recv(clientSocket, buf, MAXDATASIZE, 0)) == -1) {
             perror("recv");
             exit(1);
         }
+        printf("\nsumOfBytes=%d\n", sumOfBytes);
 
         buf[numbytes] = '\0';
 
         printf("Received in pid=%d,"
-               "\ntext=: %s \n",getpid(), buf);
-        sleep(1);
+               "\ntext=: %s \n", getpid(), buf);
+//        sleep(1);
 
 
 
@@ -92,20 +119,13 @@ int main()
         int messageLen = strlen(message) + 1;
 
         int bytesSent = send(clientSocket, message, messageLen, 0);
-        if (-1 == bytesSent)
-        {
-            printf("send() failed with error code : %d",errno);
-        }
-        else if (0 == bytesSent)
-        {
+        if (-1 == bytesSent) {
+            printf("send() failed with error code : %d", errno);
+        } else if (0 == bytesSent) {
             printf("peer has closed the TCP connection prior to send().\n");
-        }
-        else if (messageLen > bytesSent)
-        {
+        } else if (messageLen > bytesSent) {
             printf("sent only %d bytes from the required %d.\n", messageLen, bytesSent);
-        }
-        else
-        {
+        } else {
             printf("message was successfully sent .\n");
         }
 
