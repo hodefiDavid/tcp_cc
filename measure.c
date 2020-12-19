@@ -1,11 +1,8 @@
 /*
     TCP/IP-server
 */
-#define MAXDATASIZE 10485760
 
 #include<stdio.h>
-
-#include <math.h>
 #include <time.h>
 // Linux and other UNIXes
 #include <unistd.h>
@@ -23,7 +20,7 @@
 
 int main() {
     char buf[100];//was 256
-    socklen_t len;
+//    socklen_t len;
 
 //    1. open new socket
 // in order to get information from the client
@@ -108,7 +105,8 @@ int main() {
             } while (numbytes != 0);
 
             if (sumOfBytes == 1048576) {
-                printf("Received %d byetes\n", sumOfBytes);
+//                if (sumOfBytes == 8388608) {
+                    printf("Received %d byetes\n", sumOfBytes);
                 printf("Received 1mb completely, file number %d \n", file_num++);
             } else {
                 printf("Received %d byetes\n", sumOfBytes);

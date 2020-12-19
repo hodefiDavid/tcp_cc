@@ -11,7 +11,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+//#define FILE_TO_SEND    "8mb.txt"
 #define FILE_TO_SEND    "1mb.txt"
+
 #define SERVER_PORT 5060
 int fd;
 struct stat file_stat;
