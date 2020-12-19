@@ -61,27 +61,29 @@ int main() {
 
     struct sockaddr_in clientAddress;  //
     socklen_t clientAddressLen = sizeof(clientAddress);
-    int sumOfBytes = 0;
-    int file_num = 1;
-    while (1) {
-        memset(&clientAddress, 0, sizeof(clientAddress));
-//        clientAddressLen = sizeof(clientAddress);
-        int clientSocket = accept(listening_sock, (struct sockaddr *) &clientAddress, &clientAddressLen);
-        if (clientSocket == -1) {
-            printf("listen failed with error code : %d", errno);
-            close(listening_sock);
-            return -1;
-        }
+    for (int i = 0; i < 2; i++) {
+        int sumOfBytes = 0;
+        int file_num = 1;
+        double sum_time = 0;
+        while (file_num <= 5) {
+//        3. accept connection from "sender"
+            memset(&clientAddress, 0, sizeof(clientAddress));
+            int clientSocket = accept(listening_sock, (struct sockaddr *) &clientAddress, &clientAddressLen);
+            if (clientSocket == -1) {
+                printf("listen failed with error code : %d", errno);
+                close(listening_sock);
+                return -1;
+            }
 
-        struct timespec spec;
-        clock_gettime(CLOCK_REALTIME, &spec);
-        time_t start_time  = spec.tv_nsec;
+            struct timespec spec;
+            clock_gettime(CLOCK_REALTIME, &spec);
+            time_t start_time = spec.tv_nsec;
 
-        printf("A new client connection accepted\n");
+            printf("A new client connection accepted\n");
 
-        int numbytes;
+            int numbytes;
 
-        {
+            {
 //        char buffer[8192]; // or whatever you like, but best to keep it large
 //        int count = 0;
 //        int total = 0;
@@ -96,33 +98,35 @@ int main() {
 //            // EOS on the socket: close it, exit the thread, etc.
 //        }
 //        printf("total = %d", total);
-        }
+            }
+//      4. received the file
 
-        do {
-            numbytes = recv(clientSocket, buf, 100, 0);
-            sumOfBytes += numbytes;
+            do {
+                numbytes = recv(clientSocket, buf, 100, 0);
+                sumOfBytes += numbytes;
 //            printf("numbytes=%d ", numbytes);
-        } while (numbytes != 0);
+            } while (numbytes != 0);
 
-        if (sumOfBytes == 1048576) {
-            printf("Received %d byetes\n", sumOfBytes);
-            printf("Received 1mb completely, file number %d \n", file_num++);
-        } else {
-            printf("Received %d byetes\n", sumOfBytes);
-        }
-        clock_gettime(CLOCK_REALTIME, &spec);
-        time_t end_time  = spec.tv_nsec;
-        double dt = ((double)end_time-start_time)/1000000000;
-        printf("Time to receive the file from the client was %f second\n", dt);
+            if (sumOfBytes == 1048576) {
+                printf("Received %d byetes\n", sumOfBytes);
+                printf("Received 1mb completely, file number %d \n", file_num++);
+            } else {
+                printf("Received %d byetes\n", sumOfBytes);
+            }
+            clock_gettime(CLOCK_REALTIME, &spec);
+            time_t end_time = spec.tv_nsec;
+            double dt = ((double) end_time - start_time) / 1000000000;
+            sum_time += dt;
+            printf("Time to receive the file from the client was %f second\n", dt);
 
-        sumOfBytes = 0;
-        printf("Listing...\n");
-        buf[numbytes] = '\0';
+            sumOfBytes = 0;
+            printf("Listing...\n");
+            buf[numbytes] = '\0';
 
 //        printf("Received in pid=%d,"
 //               "\ntext=: %s \n", getpid(), buf);
 //        sleep(1);
-        //Reply to client
+            //Reply to client
 //        char message[] = "Welcome to our TCP-server\n";
 //        int messageLen = strlen(message) + 1;
 //
@@ -136,11 +140,20 @@ int main() {
 //        } else {
 //            printf("message was successfully sent .\n");
 //        }
+        }
+//    5. calculate the average
+        double avg_time = sum_time / 5;
+        char CC[100];
+        if(file_num==5)
+            strcpy(CC, "cubic");
+        else
+            strcpy(CC, "reno");
+
+        printf("\nAverage time to get 5 files in TPC CC %s is: %f\n\n",CC ,avg_time);
+        // TODO: All open clientSocket descriptors should be kept
+        // in some container and closed as well.
     }
-
-    // TODO: All open clientSocket descriptors should be kept
-    // in some container and closed as well.
-
+//    10. close socket
     close(listening_sock);
     return 0;
 }

@@ -19,65 +19,89 @@ struct stat file_stat;
 int main(int argc, char **argv) {
     char buf[256];
     socklen_t len;
-    for (int i = 0; i < 5; i++) {
+
+
+    for(int j =0;j<2;j++) {
+        if (j == 0) {
+            strcpy(buf, "cubic");
+        } else {
+            strcpy(buf, "reno");
+        }
+
+        for (int i = 0; i < 5; i++) {
 
 //    1. open new socket
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock == -1) {
-            perror("failed to open socket");
-            return -1;
-        }
-        printf("New socket opened\n");
+            int sock = socket(AF_INET, SOCK_STREAM, 0);
+            if (sock == -1) {
+                perror("failed to open socket");
+                return -1;
+            }
+            printf("New socket opened\n");
+
+            len = sizeof(buf);
+            if (setsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, buf, len) != 0) {
+                perror("setsockopt");
+                return -1;
+            }
+
+            if (getsockopt(sock, IPPROTO_TCP, TCP_CONGESTION, buf, &len) != 0) {
+                perror("getsockopt");
+                return -1;
+            }
+
+            printf("Current: %s\n", buf);
+
 
 //    2. create connection to measure
 //create a new sockaddr_in, and puting the server port into it
-        struct sockaddr_in serverAddress;
-        memset(&serverAddress, 0, sizeof(serverAddress));
-        serverAddress.sin_family = AF_INET;
-        serverAddress.sin_port = htons(SERVER_PORT);
+            struct sockaddr_in serverAddress;
+            memset(&serverAddress, 0, sizeof(serverAddress));
+            serverAddress.sin_family = AF_INET;
+            serverAddress.sin_port = htons(SERVER_PORT);
 
-        int connect_flag = connect(sock, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
+            int connect_flag = connect(sock, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
 
-        printf("connect_flag = %d\n", connect_flag);
+            printf("connect_flag = %d\n", connect_flag);
 
 //    3. sends large file 5 times
-        FILE *file_ptr = fopen("1mb.txt", "rb");
-        if (file_ptr == NULL) {
-            fprintf(stderr, "oh no!");
-            return 1;
-        }
-        fd = open(FILE_TO_SEND, O_RDONLY);
-        if (fd == -1) {
-            fprintf(stderr, "Error opening file --> %s", strerror(errno));
+            FILE *file_ptr = fopen("1mb.txt", "rb");
+            if (file_ptr == NULL) {
+                fprintf(stderr, "oh no!");
+                return 1;
+            }
+            fd = open(FILE_TO_SEND, O_RDONLY);
+            if (fd == -1) {
+                fprintf(stderr, "Error opening file --> %s", strerror(errno));
 
-            exit(EXIT_FAILURE);
-        }
+                exit(EXIT_FAILURE);
+            }
 
-        /* Get file stats */
-        if (fstat(fd, &file_stat) < 0) {
-            fprintf(stderr, "Error fstat --> %s", strerror(errno));
+            /* Get file stats */
+            if (fstat(fd, &file_stat) < 0) {
+                fprintf(stderr, "Error fstat --> %s", strerror(errno));
 
-            exit(EXIT_FAILURE);
-        }
+                exit(EXIT_FAILURE);
+            }
 
-        fprintf(stdout, "File Size: %ld bytes\n", file_stat.st_size);
+            fprintf(stdout, "File Size: %ld bytes\n", file_stat.st_size);
 
-        char sendbuffer[100];
-        int b;
-        int sum = 0;
-        do {
+            char sendbuffer[100];
+            int b;
+            int sum = 0;
+            do {
 //        printf("sizeof(sendbuffer) = %lu\n", sizeof(sendbuffer));
-            b = fread(sendbuffer, 1, sizeof(sendbuffer), file_ptr);
-            int bytesSent = send(sock, sendbuffer, b, 0);
+                b = fread(sendbuffer, 1, sizeof(sendbuffer), file_ptr);
+                int bytesSent = send(sock, sendbuffer, b, 0);
 //        printf("bytesSent = %d\n", bytesSent);
-            sum += bytesSent;
-        } while (!feof(file_ptr));
+                sum += bytesSent;
+            } while (!feof(file_ptr));
 
-        printf("The client send %d bytes\n", sum);
-        sleep(1);
+            printf("The client send %d bytes\n", sum);
+            sleep(1);
 
 //  6. close socket
-        close(sock);
+            close(sock);
+        }
     }
     return 0;
 }
