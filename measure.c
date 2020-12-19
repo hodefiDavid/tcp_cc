@@ -5,6 +5,8 @@
 
 #include<stdio.h>
 
+#include <math.h>
+#include <time.h>
 // Linux and other UNIXes
 #include <unistd.h>
 #include <sys/types.h>
@@ -14,6 +16,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include <time.h>
 
 
 #define SERVER_PORT 5060  //The port that the server listens
@@ -23,6 +26,7 @@ int main() {
     socklen_t len;
 
 //    1. open new socket
+// in order to get information from the client
     int listening_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (listening_sock == -1) {
         perror("failed to open socket");
@@ -46,9 +50,9 @@ int main() {
 
     // Make the socket listening; actually mother of all client sockets.
     // 500 is a Maximum size of queue connection requests
-    int listener = listen(listening_sock, 500);
+    int listener_flag = listen(listening_sock, 500);
     //number of concurrent connections
-    if (listener == -1) {
+    if (listener_flag == -1) {
         printf("listen() failed with error code : %d", errno);
         return -1;
     }
@@ -58,21 +62,26 @@ int main() {
     struct sockaddr_in clientAddress;  //
     socklen_t clientAddressLen = sizeof(clientAddress);
     int sumOfBytes = 0;
+    int file_num = 1;
     while (1) {
-
         memset(&clientAddress, 0, sizeof(clientAddress));
 //        clientAddressLen = sizeof(clientAddress);
         int clientSocket = accept(listening_sock, (struct sockaddr *) &clientAddress, &clientAddressLen);
         if (clientSocket == -1) {
             printf("listen failed with error code : %d", errno);
-            // TODO: close the sockets
+            close(listening_sock);
             return -1;
         }
+
+        struct timespec spec;
+        clock_gettime(CLOCK_REALTIME, &spec);
+        time_t start_time  = spec.tv_nsec;
 
         printf("A new client connection accepted\n");
 
         int numbytes;
 
+        {
 //        char buffer[8192]; // or whatever you like, but best to keep it large
 //        int count = 0;
 //        int total = 0;
@@ -87,55 +96,51 @@ int main() {
 //            // EOS on the socket: close it, exit the thread, etc.
 //        }
 //        printf("total = %d", total);
-
+        }
 
         do {
             numbytes = recv(clientSocket, buf, 100, 0);
-//            if (numbytes == -1) {
-//                perror("recv");
-//                exit(1);
-//            }
-            sumOfBytes+=numbytes;
-            printf("numbytes=%d", numbytes);
-//                    sleep(0.01);
+            sumOfBytes += numbytes;
+//            printf("numbytes=%d ", numbytes);
+        } while (numbytes != 0);
 
-        } while (numbytes != -1);
-        if ((numbytes = recv(clientSocket, buf, MAXDATASIZE, 0)) == -1) {
-            perror("recv");
-            exit(1);
+        if (sumOfBytes == 1048576) {
+            printf("Received %d byetes\n", sumOfBytes);
+            printf("Received 1mb completely, file number %d \n", file_num++);
+        } else {
+            printf("Received %d byetes\n", sumOfBytes);
         }
-        printf("\nsumOfBytes=%d\n", sumOfBytes);
+        clock_gettime(CLOCK_REALTIME, &spec);
+        time_t end_time  = spec.tv_nsec;
+        double dt = ((double)end_time-start_time)/1000000000;
+        printf("Time to receive the file from the client was %f second\n", dt);
 
+        sumOfBytes = 0;
+        printf("Listing...\n");
         buf[numbytes] = '\0';
 
-        printf("Received in pid=%d,"
-               "\ntext=: %s \n", getpid(), buf);
+//        printf("Received in pid=%d,"
+//               "\ntext=: %s \n", getpid(), buf);
 //        sleep(1);
-
-
-
         //Reply to client
-        char message[] = "Welcome to our TCP-server\n";
-        int messageLen = strlen(message) + 1;
-
-        int bytesSent = send(clientSocket, message, messageLen, 0);
-        if (-1 == bytesSent) {
-            printf("send() failed with error code : %d", errno);
-        } else if (0 == bytesSent) {
-            printf("peer has closed the TCP connection prior to send().\n");
-        } else if (messageLen > bytesSent) {
-            printf("sent only %d bytes from the required %d.\n", messageLen, bytesSent);
-        } else {
-            printf("message was successfully sent .\n");
-        }
-
+//        char message[] = "Welcome to our TCP-server\n";
+//        int messageLen = strlen(message) + 1;
+//
+//        int bytesSent = send(clientSocket, message, messageLen, 0);
+//        if (-1 == bytesSent) {
+//            printf("send() failed with error code : %d", errno);
+//        } else if (0 == bytesSent) {
+//            printf("peer has closed the TCP connection prior to send().\n");
+//        } else if (messageLen > bytesSent) {
+//            printf("sent only %d bytes from the required %d.\n", messageLen, bytesSent);
+//        } else {
+//            printf("message was successfully sent .\n");
+//        }
     }
 
     // TODO: All open clientSocket descriptors should be kept
     // in some container and closed as well.
 
     close(listening_sock);
-
-
     return 0;
 }

@@ -15,16 +15,15 @@
 
 #define PORT_NUMBER     5000
 #define SERVER_ADDRESS  "192.168.1.7"
-#define FILE_TO_SEND    "hello.c"
+#define FILE_TO_SEND    "1mb.txt"
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int server_socket;
     int peer_socket;
-    socklen_t       sock_len;
+    socklen_t sock_len;
     ssize_t len;
-    struct sockaddr_in      server_addr;
-    struct sockaddr_in      peer_addr;
+    struct sockaddr_in server_addr;
+    struct sockaddr_in peer_addr;
     int fd;
     int sent_bytes = 0;
     char file_size[256];
@@ -82,24 +81,20 @@ int main(int argc, char **argv)
 
 
     /* Listening to incoming connections */
-    if ((listen(server_socket, 5)) == -1)
-    {
-        fprintf(stderr, "Error on listen --> %s", strerror(errno));
-
-        exit(EXIT_FAILURE);
+    if ((listen(server_socket, 5)) == -1) {
+//        fprintf(stderr, "Error on listen --> %s", strerror(errno));
+//        exit(EXIT_FAILURE);
     }
 
     fd = open(FILE_TO_SEND, O_RDONLY);
-    if (fd == -1)
-    {
+    if (fd == -1) {
         fprintf(stderr, "Error opening file --> %s", strerror(errno));
 
         exit(EXIT_FAILURE);
     }
 
     /* Get file stats */
-    if (fstat(fd, &file_stat) < 0)
-    {
+    if (fstat(fd, &file_stat) < 0) {
         fprintf(stderr, "Error fstat --> %s", strerror(errno));
 
         exit(EXIT_FAILURE);
@@ -109,9 +104,8 @@ int main(int argc, char **argv)
 
     sock_len = sizeof(struct sockaddr_in);
     /* Accepting incoming peers */
-    peer_socket = accept(server_socket, (struct sockaddr *)&peer_addr, &sock_len);
-    if (peer_socket == -1)
-    {
+    peer_socket = accept(server_socket, (struct sockaddr *) &peer_addr, &sock_len);
+    if (peer_socket == -1) {
         fprintf(stderr, "Error on accept --> %s", strerror(errno));
 
         exit(EXIT_FAILURE);
@@ -122,8 +116,7 @@ int main(int argc, char **argv)
 
     /* Sending file size */
     len = send(peer_socket, file_size, sizeof(file_size), 0);
-    if (len < 0)
-    {
+    if (len < 0) {
         fprintf(stderr, "Error on sending greetings --> %s", strerror(errno));
 
         exit(EXIT_FAILURE);
@@ -134,11 +127,12 @@ int main(int argc, char **argv)
     offset = 0;
     remain_data = file_stat.st_size;
     /* Sending file data */
-    while (((sent_bytes = sendfile(peer_socket, fd, &offset, BUFSIZ)) > 0) && (remain_data > 0))
-    {
-        fprintf(stdout, "1. Server sent %d bytes from file's data, offset is now : %d and remaining data = %d\n", sent_bytes, offset, remain_data);
+    while (((sent_bytes = sendfile(peer_socket, fd, &offset, BUFSIZ)) > 0) && (remain_data > 0)) {
+        fprintf(stdout, "1. Server sent %d bytes from file's data, offset is now : %d and remaining data = %d\n",
+                sent_bytes, offset, remain_data);
         remain_data -= sent_bytes;
-        fprintf(stdout, "2. Server sent %d bytes from file's data, offset is now : %d and remaining data = %d\n", sent_bytes, offset, remain_data);
+        fprintf(stdout, "2. Server sent %d bytes from file's data, offset is now : %d and remaining data = %d\n",
+                sent_bytes, offset, remain_data);
     }
 
     close(peer_socket);
