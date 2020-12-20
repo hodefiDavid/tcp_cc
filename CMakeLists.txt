@@ -33,6 +33,7 @@ add_executable(Server measure.c)
 add_executable(Client sender.c)
 #add_executable(Se se.c)
 #add_executable(Cl cl.c)
+add_executable(Test test.c)
 
 #add_executable(Project_2_2 ${SOURCE_FILES})
 #set(CMAKE_CXX_STANDARD 11)
