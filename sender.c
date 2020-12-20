@@ -101,6 +101,15 @@ int main(int argc, char **argv) {
             printf("The client send %d bytes, file number %d \n", sum, file_num++);
             sleep(1);
 
+            char getReply[10];
+            bzero(getReply, sizeof(getReply));
+            read(sock, getReply, sizeof(getReply));
+            if (strcmp(getReply, "OK") == 0) {
+                printf("From Server : %s\n", getReply);
+            } else {
+                printf("The Server didnt answer\n");
+            }
+
 //            Get permit from server
             //Receive a reply from the server
 

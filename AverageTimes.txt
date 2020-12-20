@@ -11,10 +11,13 @@ Average time to get 5 files in TPC CC cubic is: 3.016162
 Average time to get 5 files in TPC CC reno is: 2.284707
 
 loss 20%:
-Average time to get 5 files in TPC CC cubic is: 1.260791
-
-
+Average time to get 5 files in TPC CC cubic is: 2.883745
+Average time to get 5 files in TPC CC reno is: 3.843486
 
 loss 25%:
+Average time to get 5 files in TPC CC cubic is: 30.175857
+Average time to get 5 files in TPC CC reno is: 8.470001
 
 loss 30%:
+Average time to get 5 files in TPC CC cubic is: 24.922092
+Average time to get 5 files in TPC CC reno is: 11.216677

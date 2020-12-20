@@ -80,6 +80,8 @@ int main() {
             printf("A new client connection accepted\n");
 
             int numbytes;
+            char reply[10] = "OK";
+            write(clientSocket, reply, sizeof(reply));
 /*
         char buffer[8192]; // or whatever you like, but best to keep it large
         int count = 0;
