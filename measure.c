@@ -23,6 +23,7 @@ int main() {
 //  1. open new socket
 //  in order to get information from the client
     int listening_sock = socket(AF_INET, SOCK_STREAM, 0);
+//    close(listening_sock);
     if (listening_sock == -1) {
         perror("failed to open socket");
         return -1;
@@ -74,8 +75,6 @@ int main() {
 //            clock_gettime(CLOCK_REALTIME, &spec);
 //            time_t start_time = spec.tv_nsec;
 
-            struct timeval stop, start;
-            gettimeofday(&start, NULL);
 
             printf("A new client connection accepted\n");
 
@@ -98,6 +97,8 @@ int main() {
         }
         printf("total = %d", total);
 */
+            struct timeval stop, start;
+            gettimeofday(&start, NULL);
 
 //          4. received the file
             do {
